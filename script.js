@@ -34,8 +34,8 @@ function gameLoop(assets, timestamp) {
     }
 }
 
-function update(_deltaTime) {
-    gameState.offsetX -= 0.2;
+function update(deltaTime) {
+    gameState.offsetX -= 20 * deltaTime;
     if (gameState.offsetX <= -1138) {
         gameState.offsetX = 0;
     }
@@ -45,30 +45,30 @@ function update(_deltaTime) {
         gameState.enemies.push({
             x: canvas.width,
             y: enemyPosition,
-            speed: 0.5,
+            speed: 100,
         })
     } else if (gameState.score >= 10 && gameState.enemies.length === 0) {
         gameState.enemies.push({
             x: canvas.width,
             y: enemyPosition,
-            speed: 0.6,
+            speed: 120,
         })
     } else if (gameState.score >= 10 &&
         gameState.enemies[gameState.enemies.length - 1].x < canvas.width - 100) {
         gameState.enemies.push({
             x: canvas.width,
             y: enemyPosition,
-            speed: 0.6,
+            speed: 120,
         })
     }
 
     gameState.seeds.forEach((seed, i, seeds) => {
-        seeds[i].x += seed.speed;
+        seeds[i].x += seed.speed * deltaTime;
     })
     gameState.seeds = gameState.seeds.filter(seed => seed.x < canvas.width);
 
     gameState.enemies.forEach((enemy, i, enemies) => {
-        enemies[i].x -= enemy.speed;
+        enemies[i].x -= enemy.speed * deltaTime;
         if (playerTakesDamage(
             gameState.player.x,
             gameState.player.y,
@@ -206,7 +206,7 @@ document.addEventListener("keydown", (e) => {
         gameState.seeds.push({
             x: 80,
             y: gameState.player.y + 32,
-            speed: 2
+            speed: 250
         });
     }
 });
