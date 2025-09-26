@@ -7,12 +7,13 @@ function loadImage(src) {
 }
 
 async function loadAssets() {
-    const [player, sky, seed] = await Promise.all([
+    const [player, sky, seed, enemy] = await Promise.all([
         loadImage("assets/player.png"),
         loadImage("assets/sky.png"),
         loadImage("assets/seed.png"),
+        loadImage("assets/enemy.png"),
     ]);
-    return { player, sky, seed };
+    return { player, sky, seed, enemy };
 }
 
 const canvas = document.getElementById("canvas");
@@ -130,9 +131,9 @@ function draw(assets) {
         50,
     );
 
-    context.fillStyle = "red";
     gameState.enemies.forEach(enemy => {
-        context.fillRect(
+        context.drawImage(
+            assets.enemy,
             enemy.x,
             enemy.y,
             64,
