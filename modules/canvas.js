@@ -1,54 +1,41 @@
-import { playGame, getCanvasAndContext } from "./modules/canvas.js";
-import { loadAssets } from "./modules/assetloader.js";
+import { restartGame, playerTakesDamage, enemyTakesDamage } from "./scene.js";
 
-async function startGame() {
-    const { canvas, context } = getCanvasAndContext();
-    const assets = await loadAssets();
+let gameState = {};
 
-    playGame(assets, canvas, context);
-}
+export function playGame(assets, canvas, context) {
+    gameState = restartGame(canvas);
+    let previousTimestamp = 0;
 
-startGame();
-
-/*
-function loadImage(src) {
-    return new Promise((resolve) => {
-        const img = new Image();
-        img.src = src;
-        img.onload = () => resolve(img);
-    });
-}
-
-async function loadAssets() {
-    const [player, sky, seed, enemy] = await Promise.all([
-        loadImage("assets/player.png"),
-        loadImage("assets/sky.png"),
-        loadImage("assets/seed.png"),
-        loadImage("assets/enemy.png"),
-    ]);
-    return { player, sky, seed, enemy };
-}
-
-const canvas = document.getElementById("canvas");
-const context = canvas?.getContext("2d");
-
-let previousTimestamp = 0;
-
-loadAssets().then((assets) => gameLoop(assets, 0));
-
-function gameLoop(assets, timestamp) {
-    const deltaTime = (timestamp - previousTimestamp) / 1000;
-    previousTimestamp = timestamp;
-    update(deltaTime);
-    draw(assets);
-    if (!gameState.isGameOver) {
-        requestAnimationFrame((timestamp) => gameLoop(assets, timestamp));
-    } else {
-        drawGameOver();
+    function gameLoop(timestamp) {
+        const deltaTime = (timestamp - previousTimestamp) / 1000;
+        previousTimestamp = timestamp;
+        update(deltaTime, gameState, canvas);
+        draw(assets, gameState, canvas, context);
+        if (gameState.isGameOver) {
+            drawGameOver(gameState, canvas, context);
+        } else {
+            requestAnimationFrame(gameLoop);
+        }
     }
+    gameLoop(0);
 }
 
-function update(deltaTime) {
+document.addEventListener("keydown", (e) => {
+    if (e.code === "ArrowUp" && gameState.player.y > 16) {
+        gameState.player.y -= 16;
+    } else if (e.code === "ArrowDown"
+        && gameState.player.y < canvas.height - 70) {
+        gameState.player.y += 16;
+    } else if (e.code === "ArrowRight") {
+        gameState.seeds.push({
+            x: 80,
+            y: gameState.player.y + 32,
+            speed: 250
+        });
+    }
+});
+
+function update(deltaTime, gameState, canvas) {
     gameState.offsetX -= 20 * deltaTime;
     if (gameState.offsetX <= -1138) {
         gameState.offsetX = 0;
@@ -60,20 +47,20 @@ function update(deltaTime) {
             x: canvas.width,
             y: enemyPosition,
             speed: 100,
-        })
+        });
     } else if (gameState.score >= 10 && gameState.enemies.length === 0) {
         gameState.enemies.push({
             x: canvas.width,
             y: enemyPosition,
             speed: 120,
-        })
+        });
     } else if (gameState.score >= 10 &&
         gameState.enemies[gameState.enemies.length - 1].x < canvas.width - 100) {
         gameState.enemies.push({
             x: canvas.width,
             y: enemyPosition,
             speed: 120,
-        })
+        });
     }
 
     gameState.seeds.forEach((seed, i, seeds) => {
@@ -120,7 +107,7 @@ function update(deltaTime) {
     }
 }
 
-function draw(assets) {
+function draw(assets, gameState, canvas, context) {
     context.font = "50px Bitcount, system-ui";
     context.fillStyle = "black";
 
@@ -173,7 +160,7 @@ function draw(assets) {
     );
 }
 
-function drawGameOver() {
+function drawGameOver(gameState, canvas, context) {
     const gameOverText = "Game Over";
 
     context.fillStyle = "gray";
@@ -198,64 +185,23 @@ function drawGameOver() {
     );
 }
 
-const gameState = {
-    player: {
-        x: 16,
-        y: canvas.height / 2,
-    },
-    enemies: [],
-    seeds: [],
-    offsetX: 0,
-    score: 0,
-    isGameOver: false,
-};
+export function getCanvasAndContext() {
+    const canvas = document.getElementById("canvas");
+    if (canvas === null || !(canvas instanceof HTMLCanvasElement)) {
+        throw {
+            name: "UndeclaredCanvasError",
+            message: "a canvas element by id 'canvas' should be declared",
+        };
+    }
 
-document.addEventListener("keydown", (e) => {
-    if (e.code === "ArrowUp" && gameState.player.y > 16) {
-        gameState.player.y -= 16;
-    } else if (e.code === "ArrowDown"
-        && gameState.player.y < canvas.height - 70) {
-        gameState.player.y += 16;
-    } else if (e.code === "ArrowRight") {
-        gameState.seeds.push({
-            x: 80,
-            y: gameState.player.y + 32,
-            speed: 250
-        });
+    const context = canvas.getContext("2d");
+    if (context === null) {
+        throw {
+            name: "ContextNullError",
+            message: "context returned null",
+        }
     }
-});
 
-
-function playerTakesDamage(playerX, playerY, enemyX, enemyY) {
-    if (playerX + 16 > enemyX + 64) {
-        return false;
-    }
-    if (playerX + 48 < enemyX) {
-        return false;
-    }
-    if (playerY + 16 > enemyY + 64) {
-        return false;
-    }
-    if (playerY + 48 < enemyY) {
-        return false;
-    }
-    return true;
+    return { canvas, context };
 }
-
-function enemyTakesDamage(seedX, seedY, enemyX, enemyY) {
-    if (seedX > enemyX + 56) {
-        return false;
-    }
-    if (seedX + 16 < enemyX + 8) {
-        return false;
-    }
-    if (seedY > enemyY + 56) {
-        return false;
-    }
-    if (seedY + 16 < enemyY + 8) {
-        return false;
-    }
-    return true;
-}
-*/
 
