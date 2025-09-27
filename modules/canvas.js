@@ -1,9 +1,13 @@
 import { restartGame, playerTakesDamage, enemyTakesDamage } from "./scene.js";
 
+const movementOffsetX = 20;
+const maximumBoundX = 1138;
+const scorePosition = { x: 16, y: 50 };
+
 let gameState = {};
 
 export function playGame(assets, canvas, context) {
-    gameState = restartGame(canvas);
+    gameState = restartGame();
     let previousTimestamp = 0;
 
     function gameLoop(timestamp) {
@@ -21,54 +25,55 @@ export function playGame(assets, canvas, context) {
 }
 
 document.addEventListener("keydown", (e) => {
-    if (e.code === "ArrowUp" && gameState.player.y > 16) {
-        gameState.player.y -= 16;
-    } else if (e.code === "ArrowDown"
-        && gameState.player.y < canvas.height - 70) {
-        gameState.player.y += 16;
+    if (e.code === "ArrowUp") {
+        gameState.player.moveUp();
+    } else if (e.code === "ArrowDown") {
+        gameState.player.moveDown();
     } else if (e.code === "ArrowRight") {
-        gameState.seeds.push({
-            x: 80,
-            y: gameState.player.y + 32,
-            speed: 250
-        });
+        gameState.player.shoot();
     }
 });
 
 function update(deltaTime, gameState, canvas) {
-    gameState.offsetX -= 20 * deltaTime;
-    if (gameState.offsetX <= -1138) {
+    gameState.offsetX -= movementOffsetX * deltaTime;
+    if (gameState.offsetX <= -maximumBoundX) {
         gameState.offsetX = 0;
     }
 
     const enemyPosition = Math.floor(Math.random() * 8) * canvas.height / 8 + 10;
-    if (gameState.score < 10 && gameState.enemies.length === 0) {
-        gameState.enemies.push({
+    if (gameState.score < 10 && gameState.enemies.enemies.length === 0) {
+        gameState.enemies.enemies.push({
             x: canvas.width,
             y: enemyPosition,
+            width: 64,
+            height: 64,
             speed: 100,
         });
-    } else if (gameState.score >= 10 && gameState.enemies.length === 0) {
-        gameState.enemies.push({
+    } else if (gameState.score >= 10 && gameState.enemies.enemies.length === 0) {
+        gameState.enemies.enemies.push({
             x: canvas.width,
             y: enemyPosition,
+            width: 64,
+            height: 64,
             speed: 120,
         });
     } else if (gameState.score >= 10 &&
-        gameState.enemies[gameState.enemies.length - 1].x < canvas.width - 100) {
-        gameState.enemies.push({
+        gameState.enemies.enemies[gameState.enemies.enemies.length - 1].x < canvas.width - 100) {
+        gameState.enemies.enemies.push({
             x: canvas.width,
             y: enemyPosition,
+            width: 64,
+            height: 64,
             speed: 120,
         });
     }
 
-    gameState.seeds.forEach((seed, i, seeds) => {
+    gameState.seeds.seeds.forEach((seed, i, seeds) => {
         seeds[i].x += seed.speed * deltaTime;
     })
-    gameState.seeds = gameState.seeds.filter(seed => seed.x < canvas.width);
+    gameState.seeds.seeds = gameState.seeds.seeds.filter(seed => seed.x < canvas.width);
 
-    gameState.enemies.forEach((enemy, i, enemies) => {
+    gameState.enemies.enemies.forEach((enemy, i, enemies) => {
         enemies[i].x -= enemy.speed * deltaTime;
         if (playerTakesDamage(
             gameState.player.x,
@@ -79,15 +84,15 @@ function update(deltaTime, gameState, canvas) {
             gameState.isGameOver = true;
             return;
         }
-        if (enemies[i].x < -62) {
+        if (enemies[i].x < 2-enemy.width) {
             gameState.score -= 1;
         }
     })
-    gameState.enemies = gameState.enemies.filter(enemy => enemy.x >= -62);
+    gameState.enemies.enemies = gameState.enemies.enemies.filter(enemy => enemy.x >= 2-enemy.width);
 
     const toDelete = [];
-    gameState.seeds.forEach((seed, i) => {
-        gameState.enemies.forEach((enemy, j) => {
+    gameState.seeds.seeds.forEach((seed, i) => {
+        gameState.enemies.enemies.forEach((enemy, j) => {
             if (enemyTakesDamage(
                 seed.x,
                 seed.y,
@@ -99,8 +104,8 @@ function update(deltaTime, gameState, canvas) {
             }
         })
     })
-    gameState.seeds = gameState.seeds.filter((_, i) => !toDelete.some((val) => i === val[0]));
-    gameState.enemies = gameState.enemies.filter((_, i) => !toDelete.some((val) => i === val[1]));
+    gameState.seeds.seeds = gameState.seeds.seeds.filter((_, i) => !toDelete.some((val) => i === val[0]));
+    gameState.enemies.enemies = gameState.enemies.enemies.filter((_, i) => !toDelete.some((val) => i === val[1]));
 
     if (gameState.score < 0) {
         gameState.isGameOver = true;
@@ -111,52 +116,58 @@ function draw(assets, gameState, canvas, context) {
     context.font = "50px Bitcount, system-ui";
     context.fillStyle = "black";
 
+    // Background
     context.drawImage(
         assets.sky,
         gameState.offsetX,
         0,
-        1138,
+        maximumBoundX,
         canvas.height
     );
     context.drawImage(
         assets.sky,
-        gameState.offsetX + 1138,
+        gameState.offsetX + maximumBoundX,
         0,
-        1138,
+        maximumBoundX,
         canvas.height,
     );
+
+    // Score
     context.fillText(
         gameState.score.toString(),
-        16,
-        50,
+        scorePosition.x,
+        scorePosition.y,
     );
 
-    gameState.enemies.forEach(enemy => {
+    // Enemies
+    gameState.enemies.enemies.forEach(enemy => {
         context.drawImage(
             assets.enemy,
             enemy.x,
             enemy.y,
-            64,
-            64
+            enemy.width,
+            enemy.height,
         );
     });
 
-    gameState.seeds.forEach(seed => {
+    // Seeds
+    gameState.seeds.seeds.forEach(seed => {
         context.drawImage(
             assets.seed,
             seed.x,
             seed.y,
-            16,
-            16
+            seed.width,
+            seed.height,
         )
     });
 
+    // Player
     context.drawImage(
         assets.player,
         gameState.player.x,
         gameState.player.y,
-        64,
-        64,
+        gameState.player.width,
+        gameState.player.height,
     );
 }
 
@@ -171,8 +182,8 @@ function drawGameOver(gameState, canvas, context) {
 
     context.fillText(
         gameState.score.toString(),
-        16,
-        50
+        scorePosition.x,
+        scorePosition.y,
     );
 
     context.font = "50px sans-serif";
@@ -202,6 +213,6 @@ export function getCanvasAndContext() {
         }
     }
 
-    return { canvas, context };
+    return { canvas: canvas, context };
 }
 

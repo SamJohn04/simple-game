@@ -1,6 +1,7 @@
-export let enemies = [];
-
-export function resetEnemies() {
-    enemies = [];
+export const enemies = {
+    enemies: [],
+    reset() {
+        this.enemies = [];
+    },
 }
 

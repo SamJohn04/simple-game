@@ -1,10 +1,11 @@
-import { player, seeds, resetPlayer, resetSeeds } from "./player.js";
-import { enemies, resetEnemies } from "./enemy.js";
+import { player } from "./player.js";
+import { seeds } from "./seed.js";
+import { enemies } from "./enemy.js";
 
-export function restartGame(canvas) {
-    resetPlayer(canvas);
-    resetSeeds();
-    resetEnemies();
+export function restartGame() {
+    player.reset();
+    seeds.reset();
+    enemies.reset();
     return {
         player,
         seeds,
@@ -12,7 +13,7 @@ export function restartGame(canvas) {
         offsetX: 0,
         score: 0,
         isGameOver: false,
-    }
+    };
 }
 
 export function playerTakesDamage(playerX, playerY, enemyX, enemyY) {
