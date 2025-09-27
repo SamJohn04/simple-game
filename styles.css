@@ -1,5 +1,10 @@
 body {
     margin: 0;
+    background: gray;
+}
+
+h1 {
+    text-align: center;
 }
 
 canvas {
