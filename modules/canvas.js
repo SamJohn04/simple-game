@@ -25,6 +25,7 @@ export function playGame(assets, canvas, context) {
 }
 
 document.addEventListener("keydown", (e) => {
+    e.preventDefault();
     if (e.code === "ArrowUp") {
         gameState.player.moveUp();
     } else if (e.code === "ArrowDown") {
