@@ -10,5 +10,7 @@ h1 {
 canvas {
     display: block;
     margin: auto;
+    max-height: 95dhv;
+    max-width: 95dvw;
 }
 
